@@ -1,1 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Cámara de registro</title>
+
+  <style>
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f1f3f4;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    video {
+      width: 100%;
+      max-width: 700px;
+      border-radius: 12px;
+      background: black;
+    }
+
+    canvas {
+      display: none;
+    }
+
+    #foto {
+      display: none;
+      width: 100%;
+      max-width: 700px;
+      margin: 20px auto;
+      border-radius: 12px;
+    }
+
+    button {
+      border: none;
+      border-radius: 7px;
+      padding: 14px 25px;
+      margin: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #tomar {
+      background: #1a73e8;
+      color: white;
+    }
+
+    #usar {
+      background: #188038;
+      color: white;
+      display: none;
+    }
+
+    #cancelar {
+      background: #d93025;
+      color: white;
+    }
+
+    #mensaje {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <h2>📷 Tomar fotografía</h2>
+
+  <video
+    id="video"
+    autoplay
+    playsinline>
+  </video>
+
+  <canvas id="canvas"></canvas>
+
+  <img
+    id="foto"
+    alt="Fotografía tomada">
+
+  <div>
+
+    <button
+      id="tomar"
+      onclick="tomarFoto()">
+
+      📷 TOMAR FOTO
+
+    </button>
+
+    <button
+      id="usar"
+      onclick="usarFoto()">
+
+      ✓ USAR FOTO
+
+    </button>
+
+    <button
+      id="cancelar"
+      onclick="cancelar()">
+
+      CANCELAR
+
+    </button>
+
+  </div>
+
+  <div id="mensaje">
+    Iniciando cámara...
+  </div>
+
+
+<script>
+
+let stream = null;
+let fotografia = null;
+
+
+// ==================================================
+// INICIAR CÁMARA
+// ==================================================
+
+async function iniciarCamara() {
+
+  const mensaje =
+    document.getElementById("mensaje");
+
+  try {
+
+    if (
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ) {
+
+      mensaje.innerText =
+        "Este navegador no permite utilizar la cámara.";
+
+      return;
+    }
+
+
+    stream =
+      await navigator.mediaDevices.getUserMedia({
+
+        video: {
+          width: {
+            ideal: 1280
+          },
+
+          height: {
+            ideal: 720
+          },
+
+          facingMode: "user"
+        },
+
+        audio: false
+
+      });
+
+
+    const video =
+      document.getElementById("video");
+
+
+    video.srcObject = stream;
+
+
+    mensaje.innerText =
+      "Cámara lista. Puedes tomar la fotografía.";
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+    mensaje.innerText =
+      "No se pudo acceder a la cámara.";
+
+    alert(
+      "No se pudo acceder a la cámara.\n\n" +
+      error.name +
+      "\n" +
+      error.message
+    );
+
+  }
+
+}
+
+
+// ==================================================
+// TOMAR FOTO
+// ==================================================
+
+function tomarFoto() {
+
+  const video =
+    document.getElementById("video");
+
+  const canvas =
+    document.getElementById("canvas");
+
+
+  if (
+    !video.videoWidth ||
+    !video.videoHeight
+  ) {
+
+    alert(
+      "La cámara todavía no está lista."
+    );
+
+    return;
+  }
+
+
+  canvas.width =
+    video.videoWidth;
+
+  canvas.height =
+    video.videoHeight;
+
+
+  const contexto =
+    canvas.getContext("2d");
+
+
+  contexto.drawImage(
+
+    video,
+
+    0,
+    0,
+
+    canvas.width,
+    canvas.height
+
+  );
+
+
+  fotografia =
+    canvas.toDataURL(
+      "image/jpeg",
+      0.85
+    );
+
+
+  const foto =
+    document.getElementById("foto");
+
+
+  foto.src =
+    fotografia;
+
+
+  foto.style.display =
+    "block";
+
+
+  document
+    .getElementById("usar")
+    .style.display =
+    "inline-block";
+
+
+  document
+    .getElementById("mensaje")
+    .innerText =
+    "Fotografía tomada correctamente.";
+
+}
+
+
+// ==================================================
+// USAR FOTO
+// ==================================================
+
+function usarFoto() {
+
+  if (!fotografia) {
+
+    alert(
+      "Primero debes tomar una fotografía."
+    );
+
+    return;
+  }
+
+
+  detenerCamara();
+
+
+  /*
+   * POR AHORA SOLO MOSTRAMOS
+   * QUE LA FOTO ESTÁ LISTA.
+   *
+   * EN EL SIGUIENTE PASO
+   * LA CONECTAREMOS CON
+   * GOOGLE APPS SCRIPT.
+   */
+
+  document
+    .getElementById("mensaje")
+    .innerText =
+    "✓ Fotografía lista para guardar.";
+
+}
+
+
+// ==================================================
+// DETENER CÁMARA
+// ==================================================
+
+function detenerCamara() {
+
+  if (stream) {
+
+    stream
+      .getTracks()
+      .forEach(
+        function(track) {
+          track.stop();
+        }
+      );
+
+    stream = null;
+  }
+
+}
+
+
+// ==================================================
+// CANCELAR
+// ==================================================
+
+function cancelar() {
+
+  detenerCamara();
+
+  window.close();
+
+}
+
+
+// ==================================================
+// INICIAR
+// ==================================================
+
+window.addEventListener(
+  "load",
+  iniciarCamara
+);
+
+</script>
+
+</body>
+
+</html>
