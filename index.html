@@ -302,22 +302,90 @@ function usarFoto() {
   }
 
 
-  detenerCamara();
-
-
-  /*
-   * POR AHORA SOLO MOSTRAMOS
-   * QUE LA FOTO ESTÁ LISTA.
-   *
-   * EN EL SIGUIENTE PASO
-   * LA CONECTAREMOS CON
-   * GOOGLE APPS SCRIPT.
-   */
-
   document
     .getElementById("mensaje")
     .innerText =
-    "✓ Fotografía lista para guardar.";
+    "Enviando fotografía...";
+
+
+  detenerCamara();
+
+
+  // URL DE TU APLICACIÓN WEB DE APPS SCRIPT
+
+  const urlAppsScript =
+    "https://script.google.com/macros/s/AKfycbw642KPq4nak3SkNRPRBxcfCGgkY_jQ2hdiOm2Pjj1Ww_mj5-tjWnAPmSN487OdqyaR/exec";
+
+
+  fetch(
+
+    urlAppsScript,
+
+    {
+
+      method: "POST",
+
+      headers: {
+
+        "Content-Type":
+          "text/plain;charset=utf-8"
+
+      },
+
+      body: JSON.stringify({
+
+        fotografia:
+          fotografia
+
+      })
+
+    }
+
+  )
+
+  .then(
+
+    async function(respuesta) {
+
+      const texto =
+        await respuesta.text();
+
+
+      console.log(
+        texto
+      );
+
+
+      document
+        .getElementById("mensaje")
+        .innerText =
+
+        "✓ Fotografía enviada correctamente.\n\n" +
+
+        "Ya puedes regresar a REGISTRO y pulsar GUARDAR.";
+
+    }
+
+  )
+
+  .catch(
+
+    function(error) {
+
+      console.error(
+        error
+      );
+
+
+      document
+        .getElementById("mensaje")
+        .innerText =
+
+        "❌ Error al enviar la fotografía.";
+
+    }
+
+  );
 
 }
 
