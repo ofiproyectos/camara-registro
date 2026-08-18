@@ -1,132 +1,279 @@
 <!DOCTYPE html>
+
 <html lang="es">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Cámara de registro</title>
+<meta charset="UTF-8">
 
-  <style>
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
-    body {
-      margin: 0;
-      padding: 20px;
-      font-family: Arial, sans-serif;
-      background: #f1f3f4;
-      text-align: center;
-    }
+<title>Cámara de registro</title>
 
-    h2 {
-      margin-bottom: 20px;
-    }
 
-    video {
-      width: 100%;
-      max-width: 700px;
-      border-radius: 12px;
-      background: black;
-    }
+<style>
 
-    canvas {
-      display: none;
-    }
+body {
 
-    #foto {
-      display: none;
-      width: 100%;
-      max-width: 700px;
-      margin: 20px auto;
-      border-radius: 12px;
-    }
+  margin: 0;
 
-    button {
-      border: none;
-      border-radius: 7px;
-      padding: 14px 25px;
-      margin: 8px;
-      font-size: 16px;
-      cursor: pointer;
-    }
+  padding: 20px;
 
-    #tomar {
-      background: #1a73e8;
-      color: white;
-    }
+  font-family: Arial, sans-serif;
 
-    #usar {
-      background: #188038;
-      color: white;
-      display: none;
-    }
+  background: #f1f3f4;
 
-    #cancelar {
-      background: #d93025;
-      color: white;
-    }
+  text-align: center;
 
-    #mensaje {
-      margin-top: 15px;
-      font-weight: bold;
-    }
+}
 
-  </style>
+
+h2 {
+
+  margin-bottom: 20px;
+
+}
+
+
+video {
+
+  width: 100%;
+
+  max-width: 700px;
+
+  border-radius: 12px;
+
+  background: #000;
+
+}
+
+
+canvas {
+
+  display: none;
+
+}
+
+
+#foto {
+
+  display: none;
+
+  width: 100%;
+
+  max-width: 700px;
+
+  margin: 20px auto;
+
+  border-radius: 12px;
+
+}
+
+
+button {
+
+  border: none;
+
+  border-radius: 7px;
+
+  padding: 14px 25px;
+
+  margin: 8px;
+
+  font-size: 16px;
+
+  cursor: pointer;
+
+}
+
+
+#tomar {
+
+  background: #1a73e8;
+
+  color: white;
+
+}
+
+
+#usar {
+
+  background: #188038;
+
+  color: white;
+
+  display: none;
+
+}
+
+
+#cancelar {
+
+  background: #d93025;
+
+  color: white;
+
+}
+
+
+#mensaje {
+
+  margin-top: 15px;
+
+  font-weight: bold;
+
+}
+
+
+#enviando {
+
+  display: none;
+
+  margin-top: 15px;
+
+  font-weight: bold;
+
+}
+
+</style>
 
 </head>
 
+
 <body>
 
-  <h2>📷 Tomar fotografía</h2>
 
-  <video
-    id="video"
-    autoplay
-    playsinline>
-  </video>
+<h2>📷 Tomar fotografía</h2>
 
-  <canvas id="canvas"></canvas>
 
-  <img
-    id="foto"
-    alt="Fotografía tomada">
+<video
+  id="video"
+  autoplay
+  playsinline>
+</video>
 
-  <div>
 
-    <button
-      id="tomar"
-      onclick="tomarFoto()">
+<canvas
+  id="canvas">
+</canvas>
 
-      📷 TOMAR FOTO
 
-    </button>
+<img
+  id="foto"
+  alt="Fotografía tomada">
 
-    <button
-      id="usar"
-      onclick="usarFoto()">
 
-      ✓ USAR FOTO
+<div>
 
-    </button>
 
-    <button
-      id="cancelar"
-      onclick="cancelar()">
+<button
+  id="tomar"
+  onclick="tomarFoto()">
 
-      CANCELAR
+📷 TOMAR FOTO
 
-    </button>
+</button>
 
-  </div>
 
-  <div id="mensaje">
-    Iniciando cámara...
-  </div>
+<button
+  id="usar"
+  onclick="usarFoto()">
+
+✓ USAR FOTO
+
+</button>
+
+
+<button
+  id="cancelar"
+  onclick="cancelar()">
+
+CANCELAR
+
+</button>
+
+
+</div>
+
+
+<div id="mensaje">
+
+Iniciando cámara...
+
+</div>
+
+
+<div id="enviando">
+
+Enviando fotografía...
+
+</div>
+
+
+<!--
+  FORMULARIO OCULTO
+
+  No usamos fetch.
+
+  Esto evita el problema de CORS.
+-->
+
+<form
+  id="formulario"
+  method="POST"
+  target="ventanaRespuesta"
+  action="https://script.google.com/macros/s/AKfycbw642KPq4nak3SkNRPRBxcfCGgkY_jQ2hdiOm2Pjj1Ww_mj5-tjWnAPmSN487OdqyaR/exec">
+
+  <input
+    type="hidden"
+    id="token"
+    name="token">
+
+
+  <input
+    type="hidden"
+    id="fotografia"
+    name="fotografia">
+
+</form>
+
+
+<iframe
+  name="ventanaRespuesta"
+  style="display:none;">
+</iframe>
 
 
 <script>
 
+
+// ==================================================
+// VARIABLES
+// ==================================================
+
 let stream = null;
+
 let fotografia = null;
+
+
+// ==================================================
+// OBTENER TOKEN
+// ==================================================
+
+function obtenerToken() {
+
+  const parametros =
+    new URLSearchParams(
+      window.location.search
+    );
+
+
+  return parametros.get(
+    "token"
+  );
+
+}
 
 
 // ==================================================
@@ -136,9 +283,13 @@ let fotografia = null;
 async function iniciarCamara() {
 
   const mensaje =
-    document.getElementById("mensaje");
+    document.getElementById(
+      "mensaje"
+    );
+
 
   try {
+
 
     if (
       !navigator.mediaDevices ||
@@ -149,53 +300,76 @@ async function iniciarCamara() {
         "Este navegador no permite utilizar la cámara.";
 
       return;
+
     }
 
 
     stream =
-      await navigator.mediaDevices.getUserMedia({
+      await navigator
+        .mediaDevices
+        .getUserMedia({
 
-        video: {
-          width: {
-            ideal: 1280
+          video: {
+
+            width: {
+
+              ideal: 1280
+
+            },
+
+            height: {
+
+              ideal: 720
+
+            },
+
+            facingMode:
+              "user"
+
           },
 
-          height: {
-            ideal: 720
-          },
+          audio: false
 
-          facingMode: "user"
-        },
-
-        audio: false
-
-      });
+        });
 
 
     const video =
-      document.getElementById("video");
+      document.getElementById(
+        "video"
+      );
 
 
-    video.srcObject = stream;
+    video.srcObject =
+      stream;
 
 
     mensaje.innerText =
-      "Cámara lista. Puedes tomar la fotografía.";
+      "Cámara lista.";
 
   }
 
+
   catch (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
+
 
     mensaje.innerText =
       "No se pudo acceder a la cámara.";
 
+
     alert(
+
       "No se pudo acceder a la cámara.\n\n" +
+
       error.name +
+
       "\n" +
+
       error.message
+
     );
 
   }
@@ -209,11 +383,17 @@ async function iniciarCamara() {
 
 function tomarFoto() {
 
+
   const video =
-    document.getElementById("video");
+    document.getElementById(
+      "video"
+    );
+
 
   const canvas =
-    document.getElementById("canvas");
+    document.getElementById(
+      "canvas"
+    );
 
 
   if (
@@ -226,18 +406,22 @@ function tomarFoto() {
     );
 
     return;
+
   }
 
 
   canvas.width =
     video.videoWidth;
 
+
   canvas.height =
     video.videoHeight;
 
 
   const contexto =
-    canvas.getContext("2d");
+    canvas.getContext(
+      "2d"
+    );
 
 
   contexto.drawImage(
@@ -245,9 +429,11 @@ function tomarFoto() {
     video,
 
     0,
+
     0,
 
     canvas.width,
+
     canvas.height
 
   );
@@ -255,13 +441,18 @@ function tomarFoto() {
 
   fotografia =
     canvas.toDataURL(
+
       "image/jpeg",
-      0.85
+
+      0.75
+
     );
 
 
   const foto =
-    document.getElementById("foto");
+    document.getElementById(
+      "foto"
+    );
 
 
   foto.src =
@@ -273,15 +464,20 @@ function tomarFoto() {
 
 
   document
-    .getElementById("usar")
+    .getElementById(
+      "usar"
+    )
     .style.display =
     "inline-block";
 
 
   document
-    .getElementById("mensaje")
+    .getElementById(
+      "mensaje"
+    )
     .innerText =
-    "Fotografía tomada correctamente.";
+
+    "✓ Fotografía tomada correctamente.";
 
 }
 
@@ -292,6 +488,7 @@ function tomarFoto() {
 
 function usarFoto() {
 
+
   if (!fotografia) {
 
     alert(
@@ -299,91 +496,100 @@ function usarFoto() {
     );
 
     return;
+
+  }
+
+
+  const token =
+    obtenerToken();
+
+
+  if (!token) {
+
+    alert(
+      "No se encontró la sesión del registro."
+    );
+
+    return;
+
   }
 
 
   document
-    .getElementById("mensaje")
-    .innerText =
-    "Enviando fotografía...";
+    .getElementById(
+      "enviando"
+    )
+    .style.display =
+    "block";
 
+
+  document
+    .getElementById(
+      "mensaje"
+    )
+    .innerText =
+    "Guardando fotografía...";
+
+
+  // Poner valores en el formulario
+
+  document
+    .getElementById(
+      "token"
+    )
+    .value =
+    token;
+
+
+  document
+    .getElementById(
+      "fotografia"
+    )
+    .value =
+    fotografia;
+
+
+  // Detener cámara
 
   detenerCamara();
 
 
-  // URL DE TU APLICACIÓN WEB DE APPS SCRIPT
+  // Enviar formulario
 
-  const urlAppsScript =
-    "https://script.google.com/macros/s/AKfycbw642KPq4nak3SkNRPRBxcfCGgkY_jQ2hdiOm2Pjj1Ww_mj5-tjWnAPmSN487OdqyaR/exec";
-
-
-  fetch(
-
-    urlAppsScript,
-
-    {
-
-      method: "POST",
-
-      headers: {
-
-        "Content-Type":
-          "text/plain;charset=utf-8"
-
-      },
-
-      body: JSON.stringify({
-
-        fotografia:
-          fotografia
-
-      })
-
-    }
-
-  )
-
-  .then(
-
-    async function(respuesta) {
-
-      const texto =
-        await respuesta.text();
+  document
+    .getElementById(
+      "formulario"
+    )
+    .submit();
 
 
-      console.log(
-        texto
-      );
+  // Mostrar mensaje
+
+  setTimeout(
+
+    function() {
+
+      document
+        .getElementById(
+          "enviando"
+        )
+        .style.display =
+        "none";
 
 
       document
-        .getElementById("mensaje")
+        .getElementById(
+          "mensaje"
+        )
         .innerText =
 
-        "✓ Fotografía enviada correctamente.\n\n" +
+        "✓ Fotografía enviada.\n\n" +
 
-        "Ya puedes regresar a REGISTRO y pulsar GUARDAR.";
+        "Ya puedes cerrar esta ventana y regresar a REGISTRO.";
 
-    }
+    },
 
-  )
-
-  .catch(
-
-    function(error) {
-
-      console.error(
-        error
-      );
-
-
-      document
-        .getElementById("mensaje")
-        .innerText =
-
-        "❌ Error al enviar la fotografía.";
-
-    }
+    1500
 
   );
 
@@ -396,17 +602,24 @@ function usarFoto() {
 
 function detenerCamara() {
 
+
   if (stream) {
 
     stream
       .getTracks()
       .forEach(
+
         function(track) {
+
           track.stop();
+
         }
+
       );
 
+
     stream = null;
+
   }
 
 }
@@ -430,11 +643,15 @@ function cancelar() {
 // ==================================================
 
 window.addEventListener(
+
   "load",
+
   iniciarCamara
+
 );
 
 </script>
+
 
 </body>
 
